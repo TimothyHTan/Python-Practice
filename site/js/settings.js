@@ -8,6 +8,8 @@ async function api(path, body) {
   const opts = body === undefined ? {} : { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) };
   const res = await fetch(path, opts);
   const data = await res.json().catch(() => ({}));
+  // 404 on our own API: the server window was started before this page was updated.
+  if (res.status === 404) throw new Error('The site server is older than this page. Close its window and start it again (start.bat / start.sh).');
   if (!res.ok) throw new Error(data.error ?? `Request failed (${res.status})`);
   return data;
 }
@@ -29,12 +31,15 @@ loadAi();
 const COMMAND = { claude: 'claude', codex: 'codex' };
 function showAi() {
   const path = info.clis[info.provider], name = info.providers[info.provider];
-  $('ai-status').innerHTML = path
-    ? `Using ${esc(name)} at <code>${esc(path)}</code>. Route: ${esc(info.route)}.`
-    : `${esc(name)} was not found on PATH. Install it (see the README), run <code>${COMMAND[info.provider]}</code> once to log in, then restart the server.`;
-  $('ai-status').dataset.state = path ? 'ok' : 'bad';
+  const ready = info.ready[info.provider];
+  $('ai-status').innerHTML = info.proxy
+    ? `Route: ${esc(info.route)}.`
+    : path
+      ? `Using ${esc(name)} at <code>${esc(path)}</code>. Route: ${esc(info.route)}.${info.hint ? ' ' + esc(info.hint) : ''}`
+      : `${esc(name)} was not found on PATH. Install it (see the README), run <code>${COMMAND[info.provider]}</code> once to log in, then restart the server.`;
+  $('ai-status').dataset.state = ready ? 'ok' : 'bad';
   for (const opt of $('ai-provider').options) {
-    opt.textContent = info.providers[opt.value] + (info.clis[opt.value] ? '' : ' (not installed)');
+    opt.textContent = info.providers[opt.value] + (info.ready[opt.value] ? '' : ' (not installed)');
   }
   $('ai-provider').value = info.provider;
   $('ai-model').innerHTML = '<option value="">Default</option>'
@@ -47,7 +52,7 @@ function showAi() {
   }
 
   // Codex: the server tries each model once, so a free account only sees the models it can run.
-  const codex = info.provider === 'codex' && path;
+  const codex = info.provider === 'codex' && ready;
   $('ai-scan').hidden = $('ai-models').hidden = !codex;
   $('ai-scan').disabled = info.scanning;
   if (!codex) return;

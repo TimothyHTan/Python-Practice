@@ -213,10 +213,11 @@ export function initHelper(context) {
   ctx = context;
   // The server says which CLI answers (Claude Code or Codex, picked on the Settings page) and the models it offers.
   fetch('/api/ai-info').then((r) => r.json()).then(({ route, name, models }) => {
-    $('helper-route').textContent = name;
+    $('helper-route').textContent = name ?? 'AI';
     $('helper-route').title = route;
     ctx.modelSelect.innerHTML = '<option value="">Default</option>'
-      + models.map(([id, label]) => `<option value="${esc(id)}">${esc(label)}</option>`).join('');
+      // An older server sends plain ids instead of [id, label] pairs.
+      + models.map((m) => (Array.isArray(m) ? m : [m, m])).map(([id, label]) => `<option value="${esc(id)}">${esc(label)}</option>`).join('');
     ctx.modelSelect.value = JSON.parse(localStorage.getItem('vw.ai.model') ?? '""');
     // A saved model from the other CLI (or one this account can't run) isn't listed: show and use "Default".
     if (ctx.modelSelect.selectedIndex < 0) ctx.modelSelect.value = '';

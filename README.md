@@ -138,18 +138,32 @@ Click **Settings** in the top bar:
 
 ## The AI helper and your account
 
-The AI features run `claude` or `codex` on your computer with your own login. No API key is stored in this project.
+The AI features use your own login. No API key is stored in this project. There are two ways they connect:
 
-- **Claude Code:** if your setup routes through a proxy (`ANTHROPIC_BASE_URL` in `~/.claude/settings.json`), the server
-  uses that too, and models from the proxy appear in the model picker. Your own hooks, plugins and MCP servers are skipped.
-- **Codex:** runs `codex exec` read-only in an empty temporary folder, without your `~/.codex/config.toml`
-  (so no hooks or MCP servers). It still uses your Codex login.
-  **Free and paid accounts both work:** when you pick Codex, the server checks which models your account can run by
-  sending each model Codex lists a tiny "Reply OK" prompt in the background (about 15–30 seconds). A free account then
-  only sees the models it can use (like Luna); a paid plan also sees Sol, Terra and Astra. "Default" means the best
-  model your account can run. The result is saved in `site/codex_models.local.json` (ignored by git) and checked again
-  when you sign in with a different account or Codex adds models. Press **Scan again** on the Settings page after
-  upgrading your plan.
+**1. Through an API proxy (cheapest, used automatically when one is running).** If `~/.claude/settings.json` sets
+`ANTHROPIC_BASE_URL` (and a token) pointing at a proxy such as [CLIProxyAPI](https://github.com/router-for-me/CLIProxyAPI),
+the server sends each question straight to the proxy over HTTP: Claude models through `/v1/messages`, Codex (GPT)
+models through `/v1/chat/completions`. No CLI starts, and each hint is only the tutor's short instructions plus your
+code (a few hundred tokens). A tool goes through the proxy when the proxy has a login for it. For CLIProxyAPI that means
+`cli-proxy-api -claude-login` for Claude and `cli-proxy-api -codex-login` for Codex. The Settings page shows which
+route each tool uses.
+
+**2. Through the CLI (when there is no proxy).**
+
+- **Claude Code:** runs `claude -p` with no tools and a short system prompt, so each call is one turn with about 500
+  tokens of instructions. Your own hooks, plugins, MCP servers and memory files are skipped.
+- **Codex:** runs `codex exec` read-only with Codex's tools switched off and short instructions (about 5,500 tokens
+  instead of 15,000), without your `~/.codex/config.toml`. It still uses your Codex login.
+
+Both run from the same empty folder every time, so repeated questions can reuse the prompt cache.
+
+**Free and paid Codex accounts both work:** when you pick Codex, the server checks which models your account can run
+by sending each listed model a tiny "Reply OK" prompt in the background (5–30 seconds). A free account then only sees
+the models it can use (like Luna); a paid plan also sees Sol, Terra and Astra. "Default" means the best model your
+account can run. The result is saved in `site/codex_models.local.json` (ignored by git) and checked again when the
+account, route or model list changes. Press **Scan again** on the Settings page after upgrading your plan.
+
+To use as little of your plan as possible, pick a small model (Haiku, Luna) with **Low** effort.
 
 The server only listens on `127.0.0.1` (your computer), so nobody else on your network can use it.
 
