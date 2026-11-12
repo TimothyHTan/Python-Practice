@@ -22,7 +22,7 @@ _home, _limit = os.getcwd(), sys.getrecursionlimit()
 
 def _feed(text):
     # A fresh stdin per run: the shared buffered one kept unread lines and fed them to the next run.
-    sys.stdin = io.StringIO(text + '\n' if text else '')
+    sys.stdin = io.StringIO(text + '\\n' if text else '')
 
 def _warm_imports(code):
     import importlib
