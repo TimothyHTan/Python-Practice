@@ -26,19 +26,52 @@ const loadAi = () => { for (const [id, key] of Object.entries(AI)) $(id).value =
 for (const [id, key] of Object.entries(AI)) $(id).addEventListener('change', () => localStorage.setItem(key, JSON.stringify($(id).value)));
 loadAi();
 
+const COMMAND = { claude: 'claude', codex: 'codex' };
 function showAi() {
-  $('ai-status').innerHTML = info.claude
-    ? `Found the CLI at <code>${esc(info.claude)}</code>. Route: ${esc(info.route)}.`
-    : 'The Claude Code CLI was not found on PATH. Install it (see the README), run <code>claude</code> once to log in, then restart the server.';
-  $('ai-status').dataset.state = info.claude ? 'ok' : 'bad';
-  if (info.models?.length) {
-    const group = document.createElement('optgroup');
-    group.label = 'Your CLI tool';
-    group.innerHTML = info.models.map((m) => `<option value="${esc(m)}">${esc(m)}</option>`).join('');
-    $('ai-model').append(group);
-    loadAi(); // a saved CLI-tool model can only be selected once its option exists
+  const path = info.clis[info.provider], name = info.providers[info.provider];
+  $('ai-status').innerHTML = path
+    ? `Using ${esc(name)} at <code>${esc(path)}</code>. Route: ${esc(info.route)}.`
+    : `${esc(name)} was not found on PATH. Install it (see the README), run <code>${COMMAND[info.provider]}</code> once to log in, then restart the server.`;
+  $('ai-status').dataset.state = path ? 'ok' : 'bad';
+  for (const opt of $('ai-provider').options) {
+    opt.textContent = info.providers[opt.value] + (info.clis[opt.value] ? '' : ' (not installed)');
   }
+  $('ai-provider').value = info.provider;
+  $('ai-model').innerHTML = '<option value="">Default</option>'
+    + info.models.map(([id, label]) => `<option value="${esc(id)}">${esc(label)}</option>`).join('');
+  loadAi(); // a saved model can only be selected once its option exists
+  // A model saved for the other tool (or one this account can't run) isn't listed: fall back to Default.
+  if ($('ai-model').selectedIndex < 0) {
+    $('ai-model').value = '';
+    localStorage.setItem(AI['ai-model'], '""');
+  }
+
+  // Codex: the server tries each model once, so a free account only sees the models it can run.
+  const codex = info.provider === 'codex' && path;
+  $('ai-scan').hidden = $('ai-models').hidden = !codex;
+  $('ai-scan').disabled = info.scanning;
+  if (!codex) return;
+  $('ai-models').innerHTML = info.scanning
+    ? 'Checking which Codex models your account can use (sends each one a tiny test prompt, about 30 seconds)…'
+    : info.models.length
+      ? `Models your account can use: ${info.models.map(([, label]) => esc(label)).join(', ')}. "Default" uses the first one.`
+      : 'Codex has no model list yet. Run <code>codex</code> once and sign in, then press Scan again.';
+  if (info.scanning) delete $('ai-models').dataset.state; else $('ai-models').dataset.state = info.models.length ? 'ok' : 'bad';
+  if (info.scanning) setTimeout(refreshAi, 3000);
 }
+
+async function refreshAi() {
+  try { info = { ...info, ...(await api('/api/ai-info')) }; showAi(); } catch (e) { fail($('ai-models'), e); }
+}
+
+$('ai-provider').addEventListener('change', async () => {
+  $('ai-status').textContent = 'Switching…';
+  delete $('ai-status').dataset.state;
+  try { info = await api('/api/settings', { ai: $('ai-provider').value }); showAi(); } catch (e) { fail($('ai-status'), e); }
+});
+$('ai-scan').addEventListener('click', async () => {
+  try { info = await api('/api/settings', { scan: true }); showAi(); } catch (e) { fail($('ai-models'), e); }
+});
 
 async function setFolder(folder) {
   $('folder-status').textContent = 'Saving…';

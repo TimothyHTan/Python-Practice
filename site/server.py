@@ -1,5 +1,6 @@
 """Local-only server: serves the site and forwards AI requests to the Claude Code CLI
-(through your CLI tool proxy when ~/.claude/settings.json sets ANTHROPIC_BASE_URL).
+(through your CLI tool proxy when ~/.claude/settings.json sets ANTHROPIC_BASE_URL) or to the Codex CLI,
+whichever is picked on the Settings page.
 
 Run from anywhere:  py site/server.py   then open http://localhost:8000/site/
 """
@@ -11,8 +12,11 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
+import threading
 import time
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -26,14 +30,23 @@ MAX_CHARS = 8000
 MAX_BODY = 20_000_000  # a full sync, or a chat message with a few pictures
 TIMEOUT_S = 300  # max effort on a big model can take a few minutes
 # Only these values ever reach the command line; "" means "use the CLI's default".
-# Models offered by your CLI tool (the proxy in ~/.claude/settings.json) are allowed too, see allowed_models().
-MODELS = {"", "haiku", "sonnet", "opus", "fable"}
+# Models offered by your CLI tool (the proxy in ~/.claude/settings.json) or by Codex are allowed too, see model_options().
+CLAUDE_MODELS = [("haiku", "Haiku 5.5 (fastest)"), ("sonnet", "Sonnet 5.5"), ("opus", "Opus 5.5"), ("fable", "Fable 5.2 (most capable)")]
 MODEL_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,79}$")
 IMAGE_TYPES = {"image/png", "image/jpeg", "image/gif", "image/webp"}
 MAX_IMAGES = 4
 MAX_IMAGE_B64 = 6_000_000
 EFFORTS = {"", "low", "medium", "high", "xhigh", "max"}
 CLAUDE = shutil.which("claude")
+CODEX = shutil.which("codex")
+PROVIDERS = {"claude": "Claude Code", "codex": "Codex"}
+provider = "claude"  # which CLI answers; picked on the Settings page
+CODEX_SCAN = Path(__file__).with_name("codex_models.local.json")  # which Codex models this account can run
+# Phrases Codex uses when an account may not use a model (e.g. "...is not supported when using Codex with a ChatGPT account").
+UNAVAILABLE = ("not supported", "not available", "does not have access", "do not have access", "does not exist", "model_not_found")
+SCAN_LOCK = threading.Lock()
+scanning = threading.Event()
+IMAGE_EXT = {"image/png": ".png", "image/jpeg": ".jpg", "image/gif": ".gif", "image/webp": ".webp"}
 
 SYSTEM = (
     "You are a patient Python tutor inside a practice website. The student is a beginner. "
@@ -76,8 +89,17 @@ def claude_env() -> dict:
 
 
 def route() -> str:
+    if provider == "codex":
+        return "Codex CLI (your ChatGPT / OpenAI login)"
     base = {**os.environ, **claude_env()}.get("ANTHROPIC_BASE_URL", "")
     return f"Claude Code via your CLI tool ({base.split('//')[-1].rstrip('/')})" if base else "Claude Code (your Claude login)"
+
+
+def route_name() -> str:
+    """Short label for the helper panel."""
+    if provider == "codex":
+        return "Codex"
+    return "Claude Code + CLI tool" if {**os.environ, **claude_env()}.get("ANTHROPIC_BASE_URL") else "Claude Code"
 
 
 _models_cache = (0.0, [])
@@ -104,8 +126,118 @@ def proxy_models() -> list:
     return ids
 
 
+def read_json(path: Path) -> dict:
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def codex_cache() -> dict:
+    """Codex's own model list (written by the codex CLI once it has run signed in), best model first."""
+    return read_json(Path(os.environ.get("CODEX_HOME") or Path.home() / ".codex") / "models_cache.json")
+
+
+def codex_models() -> list:
+    """Every model Codex lists. A free account may not be allowed to run all of them: see usable_codex_models()."""
+    models = codex_cache().get("models")
+    if not isinstance(models, list):
+        return []
+    return [(m["slug"], str(m.get("display_name") or m["slug"])) for m in models
+            if isinstance(m, dict) and m.get("visibility") == "list" and MODEL_RE.match(str(m.get("slug", "")))]
+
+
+def current_scan() -> dict:
+    """The last scan, if it was for the account and model list Codex has now."""
+    scan, cache = read_json(CODEX_SCAN), codex_cache()
+    fresh = cache and scan.get("identity") == cache.get("identity") and scan.get("checked") == [m for m, _ in codex_models()]
+    return scan if fresh else {}
+
+
+def usable_codex_models() -> list:
+    """The listed models this account can run (all of them until the first scan finishes)."""
+    scan = current_scan()
+    return [(m, label) for m, label in codex_models() if not scan or m in scan["usable"]]
+
+
+def scan_codex(force: bool = False):
+    """In the background, send each listed model a tiny prompt and keep the ones that answer.
+    Free ChatGPT accounts get only some models (e.g. Luna); paid plans get more. Rescans when the account
+    or Codex's model list changes, or when asked from the Settings page."""
+    with SCAN_LOCK:
+        if not CODEX or scanning.is_set() or (current_scan() and not force):
+            return
+        scanning.set()
+
+    def probe(model):
+        try:
+            ask_codex("Reply with the word OK.", model, "low", "", timeout=120)
+        except RuntimeError as e:
+            return not any(p in str(e).lower() for p in UNAVAILABLE)  # other errors (offline, limits): keep it listed
+        except subprocess.TimeoutExpired:
+            return True
+        return True
+
+    def work():
+        try:
+            if not codex_cache():
+                probe("")  # Codex writes its model cache on its first run
+            listed = [m for m, _ in codex_models()]
+            with ThreadPoolExecutor(4) as pool:
+                ok = list(pool.map(probe, listed))
+            usable = [m for m, good in zip(listed, ok) if good]
+            CODEX_SCAN.write_text(json.dumps({"identity": codex_cache().get("identity"), "checked": listed,
+                                              "usable": usable or listed, "scanned_at": time.time()}, indent=2), encoding="utf-8")
+        finally:
+            scanning.clear()
+
+    threading.Thread(target=work, daemon=True).start()
+
+
+def model_options() -> list:
+    """(id, label) pairs for the model picker of the active provider; "" (the CLI's default) is always allowed too."""
+    if provider == "codex":
+        scan_codex()  # no-op while a scan runs or the last one still matches
+        return usable_codex_models()
+    return CLAUDE_MODELS + [(m, f"{m} (CLI tool)") for m in proxy_models()]
+
+
 def allowed_models() -> set:
-    return MODELS | set(proxy_models())
+    return {""} | {m for m, _ in model_options()}
+
+
+def ask(prompt: str, model: str = "", effort: str = "", system: str = SYSTEM, images=()) -> str:
+    return (ask_codex if provider == "codex" else ask_claude)(prompt, model, effort, system, images)
+
+
+def ask_codex(prompt: str, model: str = "", effort: str = "", system: str = SYSTEM, images=(), timeout=TIMEOUT_S) -> str:
+    if not CODEX:
+        raise RuntimeError("Codex CLI not found on PATH. Install it or check `codex --version`.")
+    if not model and current_scan():
+        model = current_scan()["usable"][0]  # "Default" = the best model this account can run, not one it can't
+    with tempfile.TemporaryDirectory() as tmp:
+        work = Path(tmp)
+        answer = work / "answer.txt"
+        # Your Codex config (hooks, MCP servers, notify) stays out; auth still comes from ~/.codex.
+        # Read-only sandbox in an empty temp folder, so the agent can't change anything.
+        cmd = [CODEX, "exec", "--skip-git-repo-check", "--ephemeral", "--ignore-user-config", "--ignore-rules",
+               "--sandbox", "read-only", "--cd", str(work), "--color", "never", "--output-last-message", str(answer)]
+        if model:
+            cmd += ["--model", model]
+        if effort:
+            cmd += ["--config", f"model_reasoning_effort={effort}"]  # no quotes: Windows runs codex.cmd through cmd.exe
+        for n, image in enumerate(images):
+            path = work / f"picture{n}{IMAGE_EXT[image['media_type']]}"
+            path.write_bytes(base64.b64decode(image["data"]))
+            cmd += ["--image", str(path)]
+        # No positional prompt: codex reads it from stdin. Codex has no system-prompt flag, so it leads the prompt.
+        out = subprocess.run(cmd, input=f"{system}\n\n{prompt}", capture_output=True, text=True, encoding="utf-8",
+                             errors="replace", timeout=timeout, cwd=work)
+        reply = answer.read_text(encoding="utf-8").strip() if answer.exists() else ""
+    if out.returncode or not reply:
+        raise RuntimeError(out.stderr.strip()[-500:] or "Codex exited without an answer.")
+    return reply
 
 
 def ask_claude(prompt: str, model: str = "", effort: str = "", system: str = SYSTEM, images=()) -> str:
@@ -137,13 +269,42 @@ def ask_claude(prompt: str, model: str = "", effort: str = "", system: str = SYS
     raise RuntimeError(out.stderr.strip()[-500:] or "Claude CLI exited without an answer.")
 
 
-def load_settings():
+def read_settings() -> dict:
     try:
-        folder = json.loads(SETTINGS.read_text(encoding="utf-8")).get("folder")
+        data = json.loads(SETTINGS.read_text(encoding="utf-8"))
     except (OSError, ValueError):
-        return
-    if folder:
-        notes_store.DATA = Path(folder)
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def save_setting(key: str, value):
+    """Store one choice; None drops it (back to the default)."""
+    data = read_settings()
+    if value is None:
+        data.pop(key, None)
+    else:
+        data[key] = value
+    if data:
+        SETTINGS.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    else:
+        SETTINGS.unlink(missing_ok=True)
+
+
+def load_settings():
+    global provider
+    data = read_settings()
+    if data.get("folder"):
+        notes_store.DATA = Path(data["folder"])
+    if data.get("ai") in PROVIDERS:
+        provider = data["ai"]
+
+
+def set_provider(raw) -> None:
+    global provider
+    if raw not in PROVIDERS:
+        raise ValueError("unknown AI tool")
+    provider = raw
+    save_setting("ai", None if raw == "claude" else raw)
 
 
 def set_folder(raw) -> None:
@@ -163,15 +324,18 @@ def set_folder(raw) -> None:
             shutil.copytree(old, new, dirs_exist_ok=True)
         new.mkdir(parents=True, exist_ok=True)
         notes_store.DATA = new
-    if new == notes_store.DEFAULT:
-        SETTINGS.unlink(missing_ok=True)
-    else:
-        SETTINGS.write_text(json.dumps({"folder": str(new)}, indent=2), encoding="utf-8")
+    save_setting("folder", None if new == notes_store.DEFAULT else str(new))
 
 
 def settings_info() -> dict:
-    return {"folder": str(notes_store.DATA), "default": str(notes_store.DEFAULT),
-            "claude": CLAUDE or "", "route": route(), "models": proxy_models()}
+    return {"folder": str(notes_store.DATA), "default": str(notes_store.DEFAULT), **ai_info(),
+            "clis": {"claude": CLAUDE or "", "codex": CODEX or ""}}
+
+
+def ai_info() -> dict:
+    models = model_options()  # may start a Codex model scan, so read `scanning` after it
+    return {"provider": provider, "providers": PROVIDERS, "route": route(), "name": route_name(),
+            "models": models, "scanning": scanning.is_set()}
 
 
 def open_folder(path: Path):
@@ -213,7 +377,7 @@ class Handler(SimpleHTTPRequestHandler):
 
     def do_GET(self):
         if self.path == "/api/ai-info":  # which route the helper uses and the models it can pick
-            return self._json(200, {"route": route(), "models": proxy_models()})
+            return self._json(200, ai_info())
         if self.path == "/api/settings":
             return self._json(200, settings_info())
         return super().do_GET()
@@ -241,7 +405,13 @@ class Handler(SimpleHTTPRequestHandler):
             return self._json(200, {"folder": str(notes_store.DATA)})
         if self.path == "/api/settings":
             try:
-                set_folder(json.loads(self.rfile.read(length)).get("folder"))
+                body = json.loads(self.rfile.read(length))
+                if "ai" in body:
+                    set_provider(body["ai"])
+                if "folder" in body:
+                    set_folder(body["folder"])
+                if body.get("scan"):
+                    scan_codex(force=True)
             except (ValueError, TypeError, AttributeError) as e:
                 return self._json(400, {"error": str(e)})
             except OSError as e:
@@ -263,7 +433,7 @@ class Handler(SimpleHTTPRequestHandler):
         except (ValueError, KeyError, TypeError) as e:
             return self._json(400, {"error": f"Bad request: {e}"})
         try:
-            reply = ask_claude(PROMPTS[kind].format(problem=problem, text=text), model, effort, SYSTEMS.get(kind, SYSTEM), images)
+            reply = ask(PROMPTS[kind].format(problem=problem, text=text), model, effort, SYSTEMS.get(kind, SYSTEM), images)
             self._json(200, {"reply": reply})
         except subprocess.TimeoutExpired:
             self._json(504, {"error": f"The AI took longer than {TIMEOUT_S // 60} minutes. Try a lower effort or a faster model."})

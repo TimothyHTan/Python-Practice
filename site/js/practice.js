@@ -323,7 +323,7 @@ async function runConsole() {
   }
 }
 
-/* AI tutor (local Claude Code CLI via server.py) */
+/* AI tutor (local Claude Code or Codex CLI via server.py) */
 function problemText() {
   const samples = current.tests.filter((t) => t.sample).map((t) => `Input: ${show(t.input)}\nOutput:\n${t.output}`).join('\n\n');
   return `${current.title}\n${current.description.join('\n').replace(/`/g, '')}\n\n${samples}`;
@@ -408,12 +408,12 @@ async function askAI(kind, text) {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ kind, problem: problemText(), text, model: entry.model, effort: entry.effort }),
     });
-    const data = await res.json().catch(() => ({ error: `The server answered ${res.status}. Restart it with start.bat.` }));
+    const data = await res.json().catch(() => ({ error: `The server answered ${res.status}. Restart the site.` }));
     if (!res.ok) throw new Error(data.error);
     entry.text = data.reply;
   } catch (e) {
     entry.error = true;
-    entry.text = e.message === 'Failed to fetch' ? 'Could not reach the local server. Start it with start.bat (or "py site/server.py").' : e.message;
+    entry.text = e.message === 'Failed to fetch' ? 'Could not reach the local server. Start it with site\\start.bat (Windows) or ./site/start.sh (Linux).' : e.message;
   } finally {
     pending.delete(id);
     store.set('ailog.' + id, [entry, ...logOf(id)].slice(0, 30));

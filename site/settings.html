@@ -45,17 +45,19 @@
 
     <section class="stats-card" aria-labelledby="ai-title">
       <h2 id="ai-title">AI helper</h2>
-      <p class="stats-help">Hints, plan checks and the helper chat run through the Claude Code CLI (<code>claude</code>) on this computer,
-        using your own Claude login. The site never stores an API key.</p>
-      <p class="setting-status" id="ai-status" role="status">Checking for the Claude Code CLI…</p>
+      <p class="stats-help">Hints, plan checks and the helper chat run through an AI command-line tool on this computer, using
+        your own login: Claude Code (<code>claude</code>) or Codex (<code>codex</code>). The site never stores an API key.</p>
+      <p class="setting-status" id="ai-status" role="status">Checking which AI tools are installed…</p>
       <div class="field-row">
+        <label class="select-field">AI tool
+          <select id="ai-provider">
+            <option value="claude">Claude Code</option>
+            <option value="codex">Codex</option>
+          </select>
+        </label>
         <label class="select-field">Default model
           <select id="ai-model">
             <option value="">Default</option>
-            <option value="haiku">Haiku 5.5 (fastest)</option>
-            <option value="sonnet">Sonnet 5.5</option>
-            <option value="opus">Opus 5.5</option>
-            <option value="fable">Fable 5.2 (most capable)</option>
           </select>
         </label>
         <label class="select-field">Default effort
@@ -68,7 +70,9 @@
             <option value="max">Max (slowest)</option>
           </select>
         </label>
+        <button class="btn small" type="button" id="ai-scan" hidden>Scan again</button>
       </div>
+      <p class="setting-status" id="ai-models" role="status" hidden></p>
     </section>
   </main>
 

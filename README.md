@@ -2,10 +2,10 @@
 
 A local website for practising Python before an exam. It has practice problems that grade your code in the
 browser, step-by-step lessons, a 7-day plan, a progress page that tracks your mistakes, notes, and an AI
-helper that gives hints through the Claude Code CLI.
+helper that gives hints through the Claude Code or Codex CLI.
 
 Everything runs on your own computer. A small Python server (`site/server.py`) serves the pages, saves your work
-to a folder in Documents, and passes AI questions to the `claude` command.
+to a folder in Documents, and passes AI questions to the `claude` or `codex` command.
 
 ## What you need
 
@@ -13,8 +13,9 @@ to a folder in Documents, and passes AI questions to the `claude` command.
 - **Git**, to download the project
 - A modern browser (Chrome, Edge or Firefox)
 - An internet connection: your code runs in the browser with Pyodide, which loads from a CDN along with the fonts and the code editor
-- **Optional:** [Claude Code](https://docs.claude.com/en/docs/claude-code) for the AI helper (hints, plan checks, chat).
-  Everything else works without it.
+- **Optional:** an AI command-line tool for the AI helper (hints, plan checks, chat). Either one works:
+  [Claude Code](https://docs.claude.com/en/docs/claude-code) (needs a Claude account) or
+  [Codex](https://github.com/openai/codex) (needs a ChatGPT account). Everything else works without them.
 
 ---
 
@@ -45,14 +46,25 @@ to a folder in Documents, and passes AI questions to the `claude` command.
    Your browser opens http://localhost:8000/site/. Keep the black window open while you use the site.
    Press `Ctrl+C` in it (or close it) to stop.
 
-4. **Optional, for the AI helper:** install Claude Code and log in once:
+4. **Optional, for the AI helper:** install one of these (or both) and log in once.
+
+   Claude Code:
 
    ```powershell
    irm https://claude.ai/install.ps1 | iex
    claude
    ```
 
-   Restart `start.bat` after installing so the server can find `claude`.
+   Codex (needs Node.js):
+
+   ```powershell
+   winget install OpenJS.NodeJS.LTS
+   npm install -g @openai/codex
+   codex
+   ```
+
+   Restart `start.bat` after installing so the server can find it. If you use Codex, pick it under
+   **Settings → AI tool**. Claude Code is the default.
 
 ## Arch Linux
 
@@ -87,7 +99,9 @@ to a folder in Documents, and passes AI questions to the `claude` command.
    It opens http://localhost:8000/site/ in your browser. If it doesn't, open that address yourself.
    Press `Ctrl+C` in the terminal to stop. Running `python site/server.py` from the project folder works too.
 
-4. **Optional, for the AI helper:** install Claude Code from the AUR with yay:
+4. **Optional, for the AI helper:** install one of these (or both).
+
+   Claude Code, from the AUR with yay:
 
    ```sh
    yay -S claude-code
@@ -99,7 +113,14 @@ to a folder in Documents, and passes AI questions to the `claude` command.
    curl -fsSL https://claude.ai/install.sh | bash
    ```
 
-   Then run `claude` once to log in, and restart the site.
+   Codex, with npm (install Node.js first with `sudo pacman -S --needed nodejs npm` or `yay -S --needed nodejs npm`):
+
+   ```sh
+   sudo npm install -g @openai/codex
+   ```
+
+   Run `claude` or `codex` once to log in, then restart the site. If you use Codex, pick it under
+   **Settings → AI tool**. Claude Code is the default.
 
 ---
 
@@ -112,13 +133,23 @@ Click **Settings** in the top bar:
   It sits apart from the project, so a `git pull` never touches your work, and clearing the browser doesn't lose it either.
   Switching to an empty folder copies your saved work over. The choice is stored in `site/settings.local.json`,
   which git ignores.
-- **AI helper:** shows whether the `claude` CLI was found, and sets the default model and effort.
+- **AI helper:** picks the AI tool (Claude Code or Codex), shows whether it is installed, and sets the default
+  model and effort. The model list follows the tool you pick.
 
 ## The AI helper and your account
 
-The AI features run the `claude` command on your computer with your own Claude login. No API key is stored in
-this project. If your Claude Code setup routes through a proxy (`ANTHROPIC_BASE_URL` in `~/.claude/settings.json`),
-the server uses that too, and models from the proxy appear in the model picker.
+The AI features run `claude` or `codex` on your computer with your own login. No API key is stored in this project.
+
+- **Claude Code:** if your setup routes through a proxy (`ANTHROPIC_BASE_URL` in `~/.claude/settings.json`), the server
+  uses that too, and models from the proxy appear in the model picker. Your own hooks, plugins and MCP servers are skipped.
+- **Codex:** runs `codex exec` read-only in an empty temporary folder, without your `~/.codex/config.toml`
+  (so no hooks or MCP servers). It still uses your Codex login.
+  **Free and paid accounts both work:** when you pick Codex, the server checks which models your account can run by
+  sending each model Codex lists a tiny "Reply OK" prompt in the background (about 15–30 seconds). A free account then
+  only sees the models it can use (like Luna); a paid plan also sees Sol, Terra and Astra. "Default" means the best
+  model your account can run. The result is saved in `site/codex_models.local.json` (ignored by git) and checked again
+  when you sign in with a different account or Codex adds models. Press **Scan again** on the Settings page after
+  upgrading your plan.
 
 The server only listens on `127.0.0.1` (your computer), so nobody else on your network can use it.
 
@@ -126,7 +157,9 @@ The server only listens on `127.0.0.1` (your computer), so nobody else on your n
 
 - **Port 8000 is already in use:** another copy is probably still running. Close it, or change `PORT` in `site/server.py`.
 - **"The local server is not running":** you opened the HTML file directly. Start the server and use http://localhost:8000/site/.
-- **AI says the CLI was not found:** run `claude --version` in a new terminal. If that works, restart the site.
+- **AI says the CLI was not found:** run `claude --version` or `codex --version` in a new terminal. If that works,
+  restart the site.
+- **Codex says a model "is not supported":** pick another model, or "Default", under Settings.
 - **`py` is not recognized (Windows):** reinstall Python from python.org and tick "Add python.exe to PATH", or edit
   `site\start.bat` to use `python` instead of `py`.
 

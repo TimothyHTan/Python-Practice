@@ -32,7 +32,7 @@ panel.innerHTML = `
     <button class="key" type="button" id="helper-close" aria-label="Close the helper">Esc</button>
   </header>
   <div class="helper-settings">
-    <span id="helper-route" title="Where the helper's answers come from">Claude Code</span>
+    <span id="helper-route" title="Where the helper's answers come from">AI</span>
     <label>Model <select id="helper-model"></select></label>
     <label>Effort <select id="helper-effort"></select></label>
   </div>
@@ -211,15 +211,15 @@ export function closeHelper() {
 
 export function initHelper(context) {
   ctx = context;
-  fetch('/api/ai-info').then((r) => r.json()).then(({ route, models }) => {
-    $('helper-route').textContent = route.startsWith('Claude Code via') ? 'Claude Code + CLI tool' : 'Claude Code';
+  // The server says which CLI answers (Claude Code or Codex, picked on the Settings page) and the models it offers.
+  fetch('/api/ai-info').then((r) => r.json()).then(({ route, name, models }) => {
+    $('helper-route').textContent = name;
     $('helper-route').title = route;
-    if (!models?.length || ctx.modelSelect.querySelector('optgroup')) return;
-    const group = document.createElement('optgroup');
-    group.label = 'From your CLI tool';
-    group.innerHTML = models.map((m) => `<option value="${esc(m)}">${esc(m)}</option>`).join('');
-    ctx.modelSelect.append(group);
-    ctx.modelSelect.value = JSON.parse(localStorage.getItem('vw.ai.model') ?? '""'); // a saved CLI-tool model can stick now
+    ctx.modelSelect.innerHTML = '<option value="">Default</option>'
+      + models.map(([id, label]) => `<option value="${esc(id)}">${esc(label)}</option>`).join('');
+    ctx.modelSelect.value = JSON.parse(localStorage.getItem('vw.ai.model') ?? '""');
+    // A saved model from the other CLI (or one this account can't run) isn't listed: show and use "Default".
+    if (ctx.modelSelect.selectedIndex < 0) ctx.modelSelect.value = '';
     $('helper-model').innerHTML = ctx.modelSelect.innerHTML;
     $('helper-model').value = ctx.modelSelect.value;
   }).catch(() => {});
