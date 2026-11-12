@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vertical World · Python practice</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23ffd43b'/%3E%3Ctext x='16' y='22' font-family='monospace' font-weight='700' font-size='16' text-anchor='middle' fill='%2313213c'%3Epy%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=JetBrains+Mono:wght@400;700&display=swap">
+  <link rel="stylesheet" href="css/style.css?v=5">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/runmode/runmode-standalone.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+  <script type="importmap">
+    { "imports": { "three": "./vendor/three/build/three.module.js", "three/addons/": "./vendor/three/examples/jsm/" } }
+  </script>
+</head>
+<body>
+  <nav class="nav">
+    <a class="logo" href="index.html"><span class="logo-mark">py</span>Vertical World</a>
+    <a href="practice.html">Practice</a>
+    <a href="learn.html">Learn</a>
+    <a href="plan.html">7-day plan</a>
+    <a href="progress.html">Progress</a>
+    <a href="notes.html">Notes</a>
+    <a href="settings.html">Settings</a>
+  </nav>
+
+  <main class="hero">
+    <div class="hero-copy">
+      <h1>Practice Python one problem at a time.</h1>
+      <p>Read a short problem, plan it in pseudocode, write the code, and check it against real test cases. Python runs right in your browser.</p>
+      <a class="btn primary" href="practice.html">Start practicing</a>
+      <a class="btn" href="plan.html">See the 7-day plan</a>
+      <ol class="steps">
+        <li><span><strong>Read the problem</strong> and its example output.</span></li>
+        <li><span><strong>Write pseudocode</strong> and ask the AI if your plan holds up.</span></li>
+        <li><span><strong>Code it and submit.</strong> Every test case shows what was expected and what you printed.</span></li>
+        <li><span><strong>Write down what you learned</strong> on the notes page.</span></li>
+      </ol>
+    </div>
+    <div class="hero-canvas" aria-label="3D animation: the letters of Hello, world! dropping into a vertical column" role="img">
+      <span class="hero-hint">Drag to turn</span>
+    </div>
+  </main>
+
+  <script type="module" src="js/hero.js?v=5"></script>
+  <script type="module" src="js/palette.js?v=5"></script>
+</body>
+</html>

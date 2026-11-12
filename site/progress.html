@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Progress · Vertical World</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23ffd43b'/%3E%3Ctext x='16' y='22' font-family='monospace' font-weight='700' font-size='16' text-anchor='middle' fill='%2313213c'%3Epy%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=JetBrains+Mono:wght@400;700&display=swap">
+  <link rel="stylesheet" href="css/style.css?v=5">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/runmode/runmode-standalone.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+</head>
+<body>
+  <nav class="nav">
+    <a class="logo" href="index.html"><span class="logo-mark">py</span>Vertical World</a>
+    <a href="practice.html">Practice</a>
+    <a href="learn.html">Learn</a>
+    <a href="plan.html">7-day plan</a>
+    <a href="progress.html" aria-current="page">Progress</a>
+    <a href="notes.html">Notes</a>
+    <a href="settings.html">Settings</a>
+  </nav>
+
+  <main class="stats-page">
+    <header class="stats-head">
+      <h1>Your progress</h1>
+      <p class="stats-summary" id="summary">Loading your saved work…</p>
+      <div class="saved-to" id="saved-to" role="status"></div>
+    </header>
+
+    <section class="stats-card mistakes-card" id="mistakes" aria-labelledby="mk-title">
+      <h2 id="mk-title">Mistakes you make</h2>
+      <p class="stats-help">Every failed "Run samples" or "Submit", sorted by what went wrong. Running the same code again counts once.
+        Open a group to see each kind of mistake, your latest example of it, and how to avoid it.</p>
+      <div id="mk-body"></div>
+    </section>
+
+    <div class="stats-grid">
+      <section class="stats-card" aria-labelledby="fn-title">
+        <h2 id="fn-title">Functions you use most</h2>
+        <p class="stats-help">Counted from your latest code on every problem. Click one to see examples of it.</p>
+        <ol class="bars" id="fn-bars"></ol>
+        <details class="more-bars" id="fn-more" hidden><summary></summary><ol class="bars" id="fn-rest"></ol></details>
+      </section>
+      <section class="stats-card" aria-labelledby="cx-title">
+        <h2 id="cx-title">How you write it</h2>
+        <p class="stats-help">Loops, conditions and other building blocks in your code.</p>
+        <ol class="bars bars-blue" id="cx-bars"></ol>
+      </section>
+    </div>
+
+    <section class="stats-card attempts-card" aria-labelledby="at-title">
+      <h2 id="at-title">Problems you've tried</h2>
+      <p class="stats-help">Every "Run samples" and "Submit", most-tried first. Lots of tries without a solve is the place to revise.</p>
+      <div class="table-scroll"><table class="attempts" id="attempts"></table></div>
+    </section>
+  </main>
+
+  <script type="module" src="js/stats.js?v=5"></script>
+  <script type="module" src="js/palette.js?v=5"></script>
+</body>
+</html>

@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Practice · Vertical World</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23ffd43b'/%3E%3Ctext x='16' y='22' font-family='monospace' font-weight='700' font-size='16' text-anchor='middle' fill='%2313213c'%3Epy%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=JetBrains+Mono:wght@400;700&display=swap">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/lint/lint.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/dialog/dialog.min.css">
+  <link rel="stylesheet" href="css/style.css?v=5">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/selection/active-line.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/comment/comment.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/anyword-hint.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/lint/lint.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/dialog/dialog.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/search/searchcursor.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/search/search.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/keymap/sublime.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/runmode/runmode.min.js"></script>
+  <script type="importmap">
+    { "imports": { "three": "./vendor/three/build/three.module.js", "three/addons/": "./vendor/three/examples/jsm/" } }
+  </script>
+</head>
+<body>
+  <nav class="nav">
+    <a class="logo" href="index.html"><span class="logo-mark">py</span>Vertical World</a>
+    <a href="practice.html" aria-current="page">Practice</a>
+    <a href="learn.html">Learn</a>
+    <a href="plan.html">7-day plan</a>
+    <a href="progress.html">Progress</a>
+    <a href="notes.html">Notes</a>
+    <a href="settings.html">Settings</a>
+  </nav>
+
+  <main class="practice">
+    <aside class="problem-list">
+      <div class="plan-link" id="plan-link"></div>
+      <h2 id="list-label">Modules</h2>
+      <ol aria-labelledby="list-label" id="problem-list"></ol>
+      <button class="badge" id="badge" type="button" aria-label="Open the helper chat" aria-expanded="false" aria-controls="helper" title="Ask the helper"><span class="badge-label" aria-hidden="true">Ask the helper</span></button>
+    </aside>
+
+    <div class="split-x" id="split-x">
+      <article class="problem" id="problem" aria-live="polite"></article>
+
+      <div class="splitter x" id="splitter-x" role="separator" tabindex="0"
+           aria-orientation="vertical" aria-label="Resize problem and editor" aria-valuemin="20" aria-valuemax="70"
+           title="Drag to resize. Double-click to reset."></div>
+
+      <section class="workbench">
+        <div class="editor-bar">
+          <div class="file-tabs" role="tablist" aria-label="Editor">
+            <button class="file-tab" role="tab" id="e-code" aria-controls="pane-code" aria-selected="true">
+              <span class="file-icon py" aria-hidden="true">py</span><span class="label">main.py</span>
+            </button>
+            <button class="file-tab" role="tab" id="e-ai" aria-controls="pane-ai" aria-selected="false">
+              <span class="file-icon ai" aria-hidden="true">AI</span><span class="label"><span class="long">Pseudocode &amp; </span>AI</span>
+            </button>
+          </div>
+          <div class="run-controls">
+            <button class="ghost" id="reset" title="Clear your code for this problem">Clear</button>
+            <button class="btn small" id="run" title="Run the sample tests (Ctrl+Enter)">Run<span class="long"> samples</span><kbd>Ctrl ↵</kbd></button>
+            <button class="btn small primary" id="submit">Submit</button>
+          </div>
+        </div>
+
+        <div class="split-y" id="split-y">
+          <div class="editor-area">
+            <div class="pane" role="tabpanel" id="pane-code" aria-labelledby="e-code">
+              <textarea id="code" aria-label="Python code"></textarea>
+            </div>
+
+            <div class="pane ai-pane" role="tabpanel" id="pane-ai" aria-labelledby="e-ai" hidden>
+              <label class="field-label" for="pseudo">Your plan</label>
+              <p class="field-help">Write the steps in plain words before you code. The AI checks the plan and points out gaps, without giving you the answer.</p>
+              <textarea class="pseudo" id="pseudo" placeholder="for each character in the text&#10;    print the character"></textarea>
+              <div class="ai-controls">
+                <label class="select-field">Model
+                  <select id="ai-model">
+                    <option value="">Default</option>
+                    <option value="haiku">Haiku 5.5 (fastest)</option>
+                    <option value="sonnet">Sonnet 5.5</option>
+                    <option value="opus">Opus 5.5</option>
+                    <option value="fable">Fable 5.2 (most capable)</option>
+                  </select>
+                </label>
+                <label class="select-field">Effort
+                  <select id="ai-effort">
+                    <option value="">Default</option>
+                    <option value="low">Low (quick)</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                    <option value="xhigh">Extra high</option>
+                    <option value="max">Max (slowest)</option>
+                  </select>
+                </label>
+                <span class="spacer"></span>
+                <button class="btn small" id="hint">Get a hint</button>
+                <button class="btn small primary" id="check-plan">Check my plan</button>
+              </div>
+              <div class="ai-log-head">
+                <h2>Tutor answers</h2>
+                <button class="ghost" id="clear-log">Clear</button>
+              </div>
+              <ol class="ai-log" id="ai-log" aria-live="polite"></ol>
+            </div>
+          </div>
+
+          <div class="splitter y" id="splitter-y" role="separator" tabindex="0"
+               aria-orientation="horizontal" aria-label="Resize editor and output panel" aria-valuemin="20" aria-valuemax="85"
+               title="Drag to resize. Double-click to reset."></div>
+
+          <div class="panel">
+            <div class="tabs" role="tablist" aria-label="Output">
+              <button role="tab" aria-selected="true" aria-controls="tab-results" id="t-results">Results</button>
+              <button role="tab" aria-selected="false" aria-controls="tab-console" id="t-console">Console</button>
+              <button role="tab" aria-selected="false" aria-controls="tab-tests" id="t-tests">Test cases</button>
+              <button role="tab" aria-selected="false" aria-controls="tab-keys" id="t-keys">Shortcuts</button>
+            </div>
+
+            <div class="tab-panel" role="tabpanel" id="tab-results" aria-labelledby="t-results">
+              <div class="panel-pad" id="results"></div>
+            </div>
+
+            <div class="tab-panel" role="tabpanel" id="tab-console" aria-labelledby="t-console" hidden>
+              <div class="panel-pad">
+                <p>Run your code on its own, without the test cases. Good for trying things out.</p>
+                <label for="stdin">Input for <code>input()</code>, one line per call (optional)</label>
+                <textarea class="pseudo short" id="stdin"></textarea>
+                <p><button class="btn small" id="run-console">Run code</button></p>
+                <pre class="console-out" id="console-out" aria-live="polite">Nothing has run yet.</pre>
+              </div>
+            </div>
+
+            <div class="tab-panel" role="tabpanel" id="tab-tests" aria-labelledby="t-tests" hidden>
+              <div class="panel-pad" id="tests"></div>
+            </div>
+
+            <div class="tab-panel" role="tabpanel" id="tab-keys" aria-labelledby="t-keys" hidden>
+              <div class="panel-pad">
+                <dl class="keys">
+                  <dt>Ctrl+Enter</dt><dd>Run the sample tests</dd>
+                  <dt>Ctrl+Space</dt><dd>Show completions (they also appear as you type)</dd>
+                  <dt>Ctrl+/</dt><dd>Comment or uncomment the line</dd>
+                  <dt>Tab / Shift+Tab</dt><dd>Indent or unindent the selected lines</dd>
+                  <dt>Alt+↑ / Alt+↓</dt><dd>Move the line up or down</dd>
+                  <dt>Shift+Alt+↓</dt><dd>Duplicate the line</dd>
+                  <dt>Ctrl+D</dt><dd>Select the next match of the selected word</dd>
+                  <dt>Ctrl+F / Ctrl+H</dt><dd>Find / replace</dd>
+                  <dt>Ctrl+Z / Ctrl+Y</dt><dd>Undo / redo</dd>
+                </dl>
+                <p>A red underline is an error that stops your code from running. Yellow is advice, such as an import you never use. Hover over either to read why.</p>
+                <p>Drag the lines between panels to resize them. Double-click a line to reset it.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <footer class="statusbar">
+          <span id="status" role="status">Loading Python…</span>
+          <span id="problems-count"></span>
+          <span class="spacer"></span>
+          <span id="cursor-pos">Ln 1, Col 1</span>
+          <span>Python 3.14</span>
+        </footer>
+      </section>
+    </div>
+  </main>
+
+  <script type="module" src="js/practice.js?v=5"></script>
+  <script type="module" src="js/palette.js?v=5"></script>
+</body>
+</html>

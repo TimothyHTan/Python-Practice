@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Settings · Vertical World</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23ffd43b'/%3E%3Ctext x='16' y='22' font-family='monospace' font-weight='700' font-size='16' text-anchor='middle' fill='%2313213c'%3Epy%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=JetBrains+Mono:wght@400;700&display=swap">
+  <link rel="stylesheet" href="css/style.css?v=5">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/runmode/runmode-standalone.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+</head>
+<body>
+  <nav class="nav">
+    <a class="logo" href="index.html"><span class="logo-mark">py</span>Vertical World</a>
+    <a href="practice.html">Practice</a>
+    <a href="learn.html">Learn</a>
+    <a href="plan.html">7-day plan</a>
+    <a href="progress.html">Progress</a>
+    <a href="notes.html">Notes</a>
+    <a href="settings.html" aria-current="page">Settings</a>
+  </nav>
+
+  <main class="stats-page settings-page">
+    <header class="stats-head">
+      <h1>Settings</h1>
+      <p class="stats-summary">Where your work is saved and how the AI helper runs. These only change this computer.</p>
+    </header>
+
+    <section class="stats-card" aria-labelledby="folder-title">
+      <h2 id="folder-title">Save folder</h2>
+      <p class="stats-help">Your code, pseudocode, solved problems, attempts and mistakes are saved as normal files in their own
+        folder, separate from the site. Clearing the browser never loses them: the site restores your work from this folder.
+        When you switch to an empty folder, everything saved so far is copied there.</p>
+      <form class="field-row" id="folder-form">
+        <label class="sr-only" for="folder">Save folder path</label>
+        <input id="folder" type="text" spellcheck="false" autocomplete="off" placeholder="Full path to a folder">
+        <button class="btn small primary" type="submit">Save</button>
+        <button class="btn small" type="button" id="folder-default">Use default</button>
+        <button class="btn small" type="button" id="folder-open">Open folder</button>
+      </form>
+      <p class="setting-status" id="folder-status" role="status"></p>
+    </section>
+
+    <section class="stats-card" aria-labelledby="ai-title">
+      <h2 id="ai-title">AI helper</h2>
+      <p class="stats-help">Hints, plan checks and the helper chat run through the Claude Code CLI (<code>claude</code>) on this computer,
+        using your own Claude login. The site never stores an API key.</p>
+      <p class="setting-status" id="ai-status" role="status">Checking for the Claude Code CLI…</p>
+      <div class="field-row">
+        <label class="select-field">Default model
+          <select id="ai-model">
+            <option value="">Default</option>
+            <option value="haiku">Haiku 5.5 (fastest)</option>
+            <option value="sonnet">Sonnet 5.5</option>
+            <option value="opus">Opus 5.5</option>
+            <option value="fable">Fable 5.2 (most capable)</option>
+          </select>
+        </label>
+        <label class="select-field">Default effort
+          <select id="ai-effort">
+            <option value="">Default</option>
+            <option value="low">Low (quick)</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+            <option value="xhigh">Extra high</option>
+            <option value="max">Max (slowest)</option>
+          </select>
+        </label>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="js/settings.js?v=5"></script>
+  <script type="module" src="js/palette.js?v=5"></script>
+</body>
+</html>

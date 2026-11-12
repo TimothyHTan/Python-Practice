@@ -1,0 +1,23 @@
+# Secrets and per-computer settings: never commit these
+.env
+.env.*
+*.key
+*.pem
+.claude/
+*.local.json
+settings.local.json
+
+# Big or personal files that live next to the site but are not part of it
+/three.js/
+/Python Refresher and Projects.html
+
+# Python / Node / editor junk
+__pycache__/
+*.pyc
+*.tmp
+node_modules/
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
+.DS_Store

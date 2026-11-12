@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Learn · Vertical World</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23ffd43b'/%3E%3Ctext x='16' y='22' font-family='monospace' font-weight='700' font-size='16' text-anchor='middle' fill='%2313213c'%3Epy%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=JetBrains+Mono:wght@400;700&display=swap">
+  <link rel="stylesheet" href="css/style.css?v=5">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/runmode/runmode-standalone.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+</head>
+<body class="learn-body">
+  <nav class="nav">
+    <a class="logo" href="index.html"><span class="logo-mark">py</span>Vertical World</a>
+    <a href="practice.html">Practice</a>
+    <a href="learn.html" aria-current="page">Learn</a>
+    <a href="plan.html">7-day plan</a>
+    <a href="progress.html">Progress</a>
+    <a href="notes.html">Notes</a>
+    <a href="settings.html">Settings</a>
+  </nav>
+
+  <div class="learn">
+    <aside class="learn-side" aria-label="Learn contents">
+      <button class="side-search key" id="side-search" type="button">
+        <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="m15.5 15.5 5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        Search everything<kbd>Ctrl K</kbd>
+      </button>
+      <h2>Function finder</h2>
+      <ul class="side-links" id="side-cats"></ul>
+      <h2>Lessons <span id="lessons-done"></span></h2>
+      <ul class="side-links" id="side-lessons"></ul>
+    </aside>
+
+    <main class="learn-main" id="learn-main" tabindex="-1">
+      <section id="finder" class="finder" hidden>
+        <header class="finder-head">
+          <h1>Function finder</h1>
+          <p>Say what you want to do and get the Python for it. Every example was run for real: the output next to it is what Python printed.</p>
+          <label class="ask" for="finder-q">
+            <span class="ask-prompt" aria-hidden="true">&gt;&gt;&gt;</span>
+            <span class="ask-call" aria-hidden="true">help("</span>
+            <input id="finder-q" type="search" autocomplete="off" spellcheck="false" placeholder="letters to numbers" aria-label="What do you want to do?">
+            <span class="ask-call" aria-hidden="true">")</span>
+          </label>
+          <div class="ask-try" id="ask-try"></div>
+          <p class="finder-count" id="finder-count" role="status"></p>
+        </header>
+        <div id="finder-body"></div>
+      </section>
+      <article id="lesson" class="lesson" hidden></article>
+    </main>
+  </div>
+
+  <script type="module" src="js/learn.js?v=5"></script>
+  <script type="module" src="js/palette.js?v=5"></script>
+</body>
+</html>

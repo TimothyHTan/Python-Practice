@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Notes · Vertical World</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23ffd43b'/%3E%3Ctext x='16' y='22' font-family='monospace' font-weight='700' font-size='16' text-anchor='middle' fill='%2313213c'%3Epy%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=JetBrains+Mono:wght@400;700&display=swap">
+  <link rel="stylesheet" href="css/style.css?v=5">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/runmode/runmode-standalone.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+  <script type="importmap">
+    { "imports": { "three": "./vendor/three/build/three.module.js", "three/addons/": "./vendor/three/examples/jsm/" } }
+  </script>
+</head>
+<body>
+  <nav class="nav">
+    <a class="logo" href="index.html"><span class="logo-mark">py</span>Vertical World</a>
+    <a href="practice.html">Practice</a>
+    <a href="learn.html">Learn</a>
+    <a href="plan.html">7-day plan</a>
+    <a href="progress.html">Progress</a>
+    <a href="notes.html" aria-current="page">Notes</a>
+    <a href="settings.html">Settings</a>
+  </nav>
+
+  <main class="notes">
+    <aside class="note-list">
+      <div class="actions"><button class="btn primary" id="new">New note</button></div>
+      <div class="note-search">
+        <label class="sr-only" for="note-q">Search notes</label>
+        <input id="note-q" type="search" autocomplete="off" placeholder="Search notes">
+        <p id="note-count" role="status"></p>
+      </div>
+      <ul id="list" aria-label="Your notes"></ul>
+    </aside>
+
+    <section class="note-editor" id="editor">
+      <div class="parrot" id="parrot" aria-hidden="true"></div>
+      <div class="empty" id="empty">
+        <p>No notes yet. Write down a trick you learned, a mistake you keep making, or a snippet you want to remember.</p>
+        <button class="btn primary" id="new-empty">New note</button>
+      </div>
+      <label class="sr-only" for="title">Title</label>
+      <input id="title" placeholder="Untitled note" hidden>
+      <label class="sr-only" for="body">Note</label>
+      <textarea id="body" placeholder="Start writing… Markdown works: # heading, **bold**, - lists, ```python code```" hidden></textarea>
+      <div class="note-view md" id="view" hidden></div>
+      <div class="actions" id="note-actions" hidden>
+        <button class="btn small" id="mode" type="button" aria-keyshortcuts="Control+E"></button>
+        <span class="status" id="saved" role="status"></span>
+        <span class="spacer"></span>
+        <button class="btn small" id="delete">Delete note</button>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="js/notes.js?v=5"></script>
+  <script type="module" src="js/parrot.js?v=5"></script>
+  <script type="module" src="js/palette.js?v=5"></script>
+</body>
+</html>
