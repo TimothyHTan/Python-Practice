@@ -17,8 +17,12 @@ function start() {
     py.setStderr({ write });
     if (stop) py.setInterruptBuffer(stop);
     py.runPython(`
-import os, sys
+import io, os, sys
 _home, _limit = os.getcwd(), sys.getrecursionlimit()
+
+def _feed(text):
+    # A fresh stdin per run: the shared buffered one kept unread lines and fed them to the next run.
+    sys.stdin = io.StringIO(text + '\n' if text else '')
 
 def _warm_imports(code):
     import importlib
@@ -75,8 +79,7 @@ async function runCode(py, { id, code, inputs, files, testFiles }) {
     // Fresh copies of the problem's data files every run, in case the last run changed them.
     // Some hidden tests swap in a different version of a data file.
     for (const [name, content] of Object.entries({ ...files, ...testFiles[i] })) py.FS.writeFile(name, content);
-    let fed = false;
-    py.setStdin({ stdin: () => (fed || input === '' ? null : ((fed = true), input + '\n')) });
+    py.globals.get('_feed')(input);
     const globals = py.globals.get('dict')();
     let error = null;
     try {
